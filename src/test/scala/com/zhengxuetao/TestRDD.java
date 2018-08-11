@@ -4,7 +4,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 public class TestRDD {
-    com.zhengxuetao.RDD test = new com.zhengxuetao.RDD();
+    private com.zhengxuetao.RDD test = new com.zhengxuetao.RDD();
 
     @Test
     public void testFilter() {
@@ -19,5 +19,10 @@ public class TestRDD {
                 System.out.println(s);
             }
         }
+    }
+
+    @Test
+    public void testFlatMap() {
+        test.testFlatMap();
     }
 }
