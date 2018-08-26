@@ -2,7 +2,7 @@ package com.zhengxuetao
 
 import org.apache.spark.{SparkConf, SparkContext}
 
-class RDD {
+class RDDLearning {
 	System.setProperty("hadoop.home.dir", "D:\\tools\\hadoop-common-2.2.0")
 
 	def testFilter(): Long = {
