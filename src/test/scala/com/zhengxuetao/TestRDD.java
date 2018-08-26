@@ -4,7 +4,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 public class TestRDD {
-    private com.zhengxuetao.RDD test = new com.zhengxuetao.RDD();
+    private com.zhengxuetao.RDDLearning test = new com.zhengxuetao.RDDLearning();
 
     @Test
     public void testFilter() {
