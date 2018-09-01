@@ -1,0 +1,5 @@
+{"id":1,"name":"hdfs"}
+{"id":2,"name":"hadoop","age":11}
+{"id":3,"name":"spark","age":5}
+{"id":4,"name":"kafka","age":3,"money":1000}
+{"id":4,"name":"kafka","age":3,"money":2000}
