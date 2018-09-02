@@ -9,9 +9,9 @@ import org.apache.spark.streaming.{Seconds, StreamingContext}
 
 class SparkStreamingTest {
 	def testSparkStreaming(): Unit = {
-		val conf = new SparkConf().setAppName("sparkstreaming").setMaster("local")
+		val conf = new SparkConf().setAppName("sparkstreaming").setMaster("local[2]")
 		val ssc = new StreamingContext(conf, Seconds(5))
-		val lines = ssc.socketTextStream("localhost", 9999)
+		val lines = ssc.socketTextStream("192.168.1.212", 9999)
 		val words = lines.flatMap(_.split(" "))
 
 		val pairs = words.map(word => (word, 1))
@@ -24,7 +24,7 @@ class SparkStreamingTest {
 	}
 
 	def testKafka2Spark(group: String, topic: String): Unit = {
-		val conf = new SparkConf().setAppName("Kafka2Spark").setMaster("local[*]")
+		val conf = new SparkConf().setAppName("Kafka2Spark").setMaster("local[2]")
 		val ssc = new StreamingContext(conf, Seconds(5))
 		//smallest : 自动把offset设为最小的offset；largest : 自动把offset设为最大的offset；
 
@@ -33,16 +33,12 @@ class SparkStreamingTest {
 			"auto.offset.reset" -> "smallest",
 			"group.id" -> group)
 		val topicsSet = Set(topic)
-		try {
-			val km = new KafkaManager(kafkaParams)
-			val kafkaStream = km.createDirectStream[String, String, StringDecoder, StringDecoder](ssc, kafkaParams, topicsSet)
-			kafkaStream.foreachRDD(rdd => {
-				rdd.map(x => (x, 1)).saveAsTextFile("/data/result/" + NowDate())
-				km.updateZKOffsets(rdd)
-			})
-		} catch {
-			case e: Exception => println(e)
-		}
+		val km = new KafkaManager(kafkaParams)
+		val kafkaStream = km.createDirectStream[String, String, StringDecoder, StringDecoder](ssc, kafkaParams, topicsSet)
+		kafkaStream.foreachRDD(rdd => {
+			rdd.map(x => (x, 1)).saveAsTextFile("/data/result/" + NowDate())
+			km.updateZKOffsets(rdd)
+		})
 		ssc.start() //启动运行
 		ssc.awaitTermination() //等待计算结束
 		ssc.stop()
