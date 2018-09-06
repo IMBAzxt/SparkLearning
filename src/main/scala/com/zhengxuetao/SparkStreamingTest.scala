@@ -1,8 +1,5 @@
 package com.zhengxuetao
 
-import java.text.SimpleDateFormat
-import java.util.Date
-
 import kafka.serializer.StringDecoder
 import org.apache.spark.SparkConf
 import org.apache.spark.streaming.{Seconds, StreamingContext}
@@ -24,7 +21,7 @@ class SparkStreamingTest {
 	}
 
 	def testKafka2Spark(group: String, topic: String): Unit = {
-		val conf = new SparkConf().setAppName("Kafka2Spark").setMaster("local[2]")
+		val conf = new SparkConf().setAppName("Kafka2Spark").setMaster("local[*]")
 		val ssc = new StreamingContext(conf, Seconds(5))
 		//smallest : 自动把offset设为最小的offset；largest : 自动把offset设为最大的offset；
 
@@ -36,7 +33,7 @@ class SparkStreamingTest {
 		val km = new KafkaManager(kafkaParams)
 		val kafkaStream = km.createDirectStream[String, String, StringDecoder, StringDecoder](ssc, kafkaParams, topicsSet)
 		kafkaStream.foreachRDD(rdd => {
-			rdd.map(x => (x, 1)).saveAsTextFile("/data/result/" + NowDate())
+			rdd.map(x => (x, 1)).saveAsTextFile("/data/result/")
 			km.updateZKOffsets(rdd)
 		})
 		ssc.start() //启动运行
@@ -44,26 +41,34 @@ class SparkStreamingTest {
 		ssc.stop()
 	}
 
-	/**
-	  * 只支持0.8及以下的版本
-	  *
-	  */
 	//	def testZkUtilSaveOffset(group: String, topic: String): Unit = {
 	//		val conf = new SparkConf().setAppName("Kafka2Spark").setMaster("local[4]")
 	//		val ssc = new StreamingContext(conf, Seconds(5))
 	//		val kafkaParam = scala.collection.immutable.Map[String, String](
 	//			"metadata.broker.list" -> "dn1:9092,dn2:9092",
-	//			//			"enable.auto.commit" -> "(false: java.lang.Boolean)",
+	//			"enable.auto.commit" -> "(false: java.lang.Boolean)",
 	//			"auto.offset.reset" -> "smallest",
 	//			"group.id" -> group)
 	//
-	//		//		val topic: String = "flumetest" //消费的 topic 名字
 	//		val topics: Set[String] = Set(topic) //创建 stream 时使用的 topic 名字集合
 	//		val topicDirs = new ZKGroupTopicDirs(group, topic) //创建一个 ZKGroupTopicDirs 对象，对保存
-	//		//  val zkClient = new ZkClient(zkServers)
+	//		val zkClient = new ZkClient("dn1:2181")
 	//		// 必须要使用带有ZkSerializer参数的构造函数来构造，否则在之后使用ZkUtils的一些方法时会出错，而且在向zookeeper中写入数据时会导致乱码
 	//		// org.I0Itec.zkclient.exception.ZkMarshallingError: java.io.StreamCorruptedException: invalid stream header: 7B227665
-	//		val zkClient = new ZkClient("dn1:2181", Integer.MAX_VALUE, 10000, new MySerializer) //zookeeper 的host 和 ip，创建一个 client
+	//		//			val zkClient = new ZkClient("dn1:2181", Integer.MAX_VALUE, 10000, new MySerializer) //zookeeper 的host 和 ip，创建一个 client
+	//
+	//		var props = new Properties[String, Object]();
+	//		props.put("bootstrap.servers", "dn1:9092");
+	//		props.put("acks", "all");
+	//		props.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
+	//		props.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
+	//		//生产者发送消息
+	//		val kc = new KafkaCluster(kafkaParam)
+	//		val partitions:Either[Err, Set[TopicAndPartition]] = kc.getPartitions(topics)
+	//		if(partitions.isRight) {
+	//			var p = partitions.right;
+	//			p.foreach(a => print(p))
+	//		}
 	//		val children = zkClient.countChildren(s"${topicDirs.consumerOffsetDir}") //查询该路径下是否字节点（默认有字节点为我们自己保存不同 partition 时生成的）
 	//		var kafkaStream: InputDStream[(String, String)] = null
 	//		var fromOffsets: Map[TopicAndPartition, Long] = Map() //如果 zookeeper 中有保存 offset，我们会利用这个 offset 作为 kafkaStream 的起始位置
@@ -96,18 +101,12 @@ class SparkStreamingTest {
 	//						println(s"@@@@@@ topic  ${o.topic}  partition ${o.partition}  fromoffset ${o.fromOffset}  untiloffset ${o.untilOffset} #######")
 	//					}
 	//					//sparkstreaming 写hdfs如果指定同一个文件，不同批次内容会覆盖。因此这里设置每个批次都是不一样的文件。
-	//					rdd.map(x => (x, 1)).saveAsTextFile("hdfs://nn:8020/data/result/" + NowDate())
+	//					//					rdd.map(x => (x, 1)).saveAsTextFile("hdfs://nn:8020/data/result/" + NowDate())
 	//				}
 	//		ssc.start() //启动运行
 	//		ssc.awaitTermination() //等待计算结束
 	//		ssc.stop()
 	//	}
 
-	def NowDate(): String = {
-		val now: Date = new Date()
-		val dateFormat: SimpleDateFormat = new SimpleDateFormat("yyyyMMddHHmmss")
-		val date = dateFormat.format(now)
-		return date
-	}
 
 }
