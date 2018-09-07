@@ -10,7 +10,7 @@ object Test {
 			System.exit(1)
 		}
 		val ss = new SparkStreamingTest()
-		//		ss.testZkUtilSaveOffset(args(0).toString, args(1).toString)
-		ss.testKafka2Spark(args(0).toString, args(1).toString);
+		ss.testZkUtilSaveOffset(args(0).toString, args(1).toString)
+		//		ss.testKafka2Spark(args(0).toString, args(1).toString);
 	}
 }
