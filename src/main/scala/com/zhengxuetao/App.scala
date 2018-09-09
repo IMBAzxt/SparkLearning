@@ -14,11 +14,13 @@ object App {
 		var seq = Seq[Phone](p1, p2);
 
 		val l1 = p3 +: seq
-		l1.foreach(p => println(p.phone_id))
+        //		l1.foreach(p => println(p.phone_id))
 
 		//		val l2 = l1 ::: list //合并列表，往list头部加入l1
 		//		l2.foreach(p => println(p.phone_id))
 		//		val l3 = list :+ p3 //往列表末尾加入数据
 		//		l3.foreach(p => println(p.phone_id))
+        var a = Array("a", "w", "c", "d", "b")
+        a.foreach(print)
 	}
 }
