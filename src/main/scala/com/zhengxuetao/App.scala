@@ -2,23 +2,23 @@ package com.zhengxuetao
 
 
 /**
- * Hello world!
- *
- */
+  * Hello world!
+  *
+  */
 object App {
 
-  def main(args: Array[String]): Unit = {
-      var p1 = new Phone(1, "小米")
-      var p2 = new Phone(id = 2)
-      var p3 = new Phone(3, "华为", "国产")
-      var list = List[Phone](p1, p2);
-      list.foreach(p => {
-          if (p.phone_id == 1) {
-              p.phone_name = "苹果"
-              p.show()
-          }
-      })
-      val l = p3 :: list
-      l.foreach(p => print(p.phone_id))
-  }
+	def main(args: Array[String]): Unit = {
+		var p1 = new Phone(1, "小米")
+		var p2 = new Phone(id = 2)
+		var p3 = new Phone(3, "华为", "国产")
+		var seq = Seq[Phone](p1, p2);
+
+		val l1 = p3 +: seq
+		l1.foreach(p => println(p.phone_id))
+
+		//		val l2 = l1 ::: list //合并列表，往list头部加入l1
+		//		l2.foreach(p => println(p.phone_id))
+		//		val l3 = list :+ p3 //往列表末尾加入数据
+		//		l3.foreach(p => println(p.phone_id))
+	}
 }
