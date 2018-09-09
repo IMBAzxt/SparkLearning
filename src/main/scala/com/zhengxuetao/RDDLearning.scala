@@ -13,10 +13,13 @@ class RDDLearning {
 		return count
 	}
 
-	def testMap(): Array[Array[String]] = {
+	def testMap(): Unit = {
 		val conf = new SparkConf().setAppName("test").setMaster("local")
 		val sc = new SparkContext(conf)
 		val file = sc.textFile("src\\main\\resources\\testmap")
+		file.map(line => {
+			line.split(",")
+		})
 		return file.map(line => line.split(",")).collect()
 	}
 
