@@ -18,11 +18,13 @@ class RDDLearning {
 	def testMap(): Unit = {
 		val conf = new SparkConf().setAppName("test").setMaster("local")
 		val sc = new SparkContext(conf)
+		sc.setLogLevel("ERROR")
 		val file = sc.textFile("src\\main\\resources\\testmap")
-		file.map(line => {
+		val a = file.map(line => {
             val arr = line.split(",")
             (arr(0), arr(1))
-        }).foreach(println)
+		}).collect()
+		println(a)
     }
 
     /**
@@ -98,7 +100,7 @@ class RDDLearning {
     }
 
     /**
-      * 跟reduceByKey一样的效果。性能上有什么区别？
+	  * 跟reduceByKey一样的效果。增加了自定义的merge和combine
       */
     def testAggregateByKey(): Unit = {
         val conf = new SparkConf().setAppName("test").setMaster("local")
@@ -116,21 +118,84 @@ class RDDLearning {
 
     }
 
+	/**
+	  * 比aggregateByKey更低一层的接口，可以自定义输入的(k,v)值。其他的跟aggregateByKey一样
+	  */
+	def testCombineByKey(): Unit = {
+		val conf = new SparkConf().setAppName("test").setMaster("local")
+		val sc = new SparkContext(conf)
+		val file = sc.textFile("src\\main\\resources\\testmap")
+
+		type MVType = (Int, Int) //定义一个元组类型(科目计数器,分数)
+		val v = file
+				.map(line => {
+					val arr = line.split(",")
+					(arr(0), Integer.parseInt(arr(1)))
+				})
+				.combineByKey(
+					score => (score, 1),
+					(c1: MVType, v1) => (c1._1 + v1, c1._2 + 1),
+					(c2: MVType, c3: MVType) => (c2._1 + c3._1, c2._2 + c3._2)
+				).map(x => (x._1, x._2._1 / x._2._2)).foreach(println)
+	}
+
+	/**
+	  * 排序
+	  */
+	def testSortByOrByKey(): Unit = {
+		val conf = new SparkConf().setAppName("test").setMaster("local")
+		val sc = new SparkContext(conf)
+		val file = sc.textFile("src\\main\\resources\\testmap")
+		file.map(line => {
+			val arr = line.split(",")
+			(arr(0), Integer.parseInt(arr(1)))
+		})
+				//				.sortBy(f => f._2, false)
+				.sortByKey(false)
+				.foreach(println)
+	}
+
+	/**
+	  * 将RDD中元素前两个传给输入函数，产生一个新的return值，
+	  * 新产生的return值与RDD中下一个元素（第三个元素）组成两个元素，
+	  * 再被传给输入函数，直到最后只有一个值为止。
+	  * mutable.Map.put如果key相同，值将被覆盖。
+	  */
 	def testMapReduce(): Unit = {
 		val conf = new SparkConf().setAppName("test").setMaster("local")
 		val sc = new SparkContext(conf)
 		val file = sc.textFile("src\\main\\resources\\testmap")
-        file
+		val result = file
                 .map(line => {
                     val arr = line.split(",")
-                    (arr(0), Integer.parseInt(arr(1)))
+					(mutable.Map[String, Integer](), (arr(0), Integer.parseInt(arr(1))))
                 })
-        //                .reduce((x, y) => {
-        //                    (x + y)
-        //                })
+				.reduce((x, y) => {
+					var t1: mutable.Map[String, Integer] = x._1
+					if (t1.isEmpty) {
+						if (x._2._1 == y._2._1) {
+							x._1.put(x._2._1, x._2._2 + y._2._2)
+						} else {
+							x._1.put(x._2._1, x._2._2)
+							x._1.put(y._2._1, y._2._2)
+						}
+					} else {
+						var t2 = t1.get(y._2._1);
+						if (t2 == None) {
+							x._1.put(y._2._1, y._2._2)
+						} else {
+							x._1.put(y._2._1, (y._2._2 + t2.get))
+						}
+					}
+					x
+				})
+		result._1.foreach(println)
 		sc.stop()
 	}
 
+	/**
+	  * 将内容转化成list返回。
+	  */
 	def testFlatMap(): Unit = {
 		val conf = new SparkConf().setAppName("test").setMaster("local")
 		val sc = new SparkContext(conf)
@@ -141,6 +206,9 @@ class RDDLearning {
 		}
 	}
 
+	/**
+	  * 遍历每一个partition,传入的值是一个partition的集合。
+	  */
 	def testMapPartition(): Unit = {
 		val conf = new SparkConf().setAppName("test").setMaster("local")
 		val sc = new SparkContext(conf)
@@ -161,6 +229,9 @@ class RDDLearning {
 		}
 	}
 
+	/**
+	  * 遍历每一个partition,传入的值是一个（partitionKey,Iterator[T]）。
+	  */
 	def testMapPartitionsWithIndex(): Unit = {
 		val conf = new SparkConf().setAppName("test").setMaster("local")
 		val sc = new SparkContext(conf)
@@ -182,6 +253,9 @@ class RDDLearning {
 		}
 	}
 
+	/**
+	  * 采样
+	  */
 	def testSample(): Unit = {
 		val conf = new SparkConf().setAppName("test").setMaster("local")
 		val sc = new SparkContext(conf)
@@ -226,13 +300,4 @@ class RDDLearning {
 		rdd3.distinct().sortBy(x => x,true).foreach(println)
 	}
 
-	/**
-	  * 汇聚
-	  */
-	def testGroupBy(): Unit = {
-		val conf = new SparkConf().setAppName("test").setMaster("local")
-		val sc = new SparkContext(conf)
-		val rdd1 = sc.makeRDD(20 to 10, 3)
-		rdd1.groupBy(x => x).foreach(println)
-	}
 }

@@ -8,7 +8,7 @@ package com.zhengxuetao
 object App {
 
 	def main(args: Array[String]): Unit = {
-		var p1 = new Phone(1, "小米")
+		val p1 = new Phone(1, "小米")
 		var p2 = new Phone(id = 2)
 		var p3 = new Phone(3, "华为", "国产")
 		var seq = Seq[Phone](p1, p2);
@@ -20,7 +20,7 @@ object App {
 		//		l2.foreach(p => println(p.phone_id))
 		//		val l3 = list :+ p3 //往列表末尾加入数据
 		//		l3.foreach(p => println(p.phone_id))
-        var a = Array("a", "w", "c", "d", "b")
-        a.foreach(print)
+		//        var a = Array("a", "w", "c", "d", "b")
+		//        a.foreach(print)
 	}
 }
