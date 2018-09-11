@@ -15,11 +15,20 @@ class SparkStreamingTest {
 	def testSparkStreaming(): Unit = {
 		val conf = new SparkConf().setAppName("sparkstreaming").setMaster("local[2]")
 		val ssc = new StreamingContext(conf, Seconds(5))
+		ssc.sparkContext.setLogLevel("ERROR")
+		ssc.checkpoint("hdfs://nn:8020/data/cp1")
 		val lines = ssc.socketTextStream("192.168.1.212", 9999)
 		val words = lines.flatMap(_.split(" "))
 
 		val pairs = words.map(word => (word, 1))
-		val wordCounts = pairs.reduceByKey(_ + _)
+		val wordCounts = pairs
+				//								.reduceByKey(_ + _)
+				//				.updateStateByKey((values: Seq[Int], option: Option[Int]) => {
+				//					val v1 = values.sum
+				//					val v2 = option.getOrElse(0)
+				//					Some(v1 + v2)
+				//				})
+				.reduceByKeyAndWindow((a: Int, b: Int) => (a + b), Seconds(30), Seconds(5))
 		wordCounts.print()
 
 		ssc.start() //启动运行
